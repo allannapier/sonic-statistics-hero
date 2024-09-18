@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useQuery } from "@tanstack/react-query";
 import { initiateSpotifyAuth, fetchRecentTracks } from '../utils/spotifyAuth';
+import { toast } from "@/components/ui/use-toast";
 
 const SpotifyStats = () => {
   const [accessToken, setAccessToken] = useState(localStorage.getItem('spotify_access_token'));
@@ -17,15 +18,34 @@ const SpotifyStats = () => {
     queryKey: ['recentTracks', accessToken],
     queryFn: () => fetchRecentTracks(accessToken),
     enabled: !!accessToken,
+    onError: (error) => {
+      toast({
+        title: "Error fetching tracks",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   const handleAuth = async () => {
-    await initiateSpotifyAuth();
+    try {
+      await initiateSpotifyAuth();
+    } catch (error) {
+      toast({
+        title: "Authentication Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleLogout = () => {
     localStorage.removeItem('spotify_access_token');
     setAccessToken(null);
+    toast({
+      title: "Logged out",
+      description: "You've been successfully logged out of Spotify.",
+    });
   };
 
   return (

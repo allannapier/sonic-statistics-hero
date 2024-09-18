@@ -1,4 +1,4 @@
-const CLIENT_ID = 'YOUR_SPOTIFY_CLIENT_ID';
+const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
 const REDIRECT_URI = 'http://localhost:5173/callback';
 const SCOPES = ['user-read-recently-played'];
 const AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize';
@@ -23,6 +23,10 @@ async function generateCodeChallenge(codeVerifier) {
 }
 
 export async function initiateSpotifyAuth() {
+  if (!CLIENT_ID) {
+    throw new Error('Spotify Client ID is not set. Please check your environment variables.');
+  }
+
   const codeVerifier = generateCodeVerifier(128);
   const codeChallenge = await generateCodeChallenge(codeVerifier);
 
@@ -60,7 +64,8 @@ export async function getAccessToken(code) {
   });
 
   if (!response.ok) {
-    throw new Error('HTTP status ' + response.status);
+    const errorData = await response.json();
+    throw new Error(`HTTP status ${response.status}: ${errorData.error}`);
   }
 
   const data = await response.json();
